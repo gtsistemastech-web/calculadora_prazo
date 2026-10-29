@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PrazoControl | Calculadora e Configurações</title>
+  <!-- FontAwesome & Google Fonts -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <!-- Estilos customizados -->
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+
+<div class="app-container">
+
+  <!-- ═══════════════════════════════
+       BARRA LATERAL (SIDEBAR)
+  ═══════════════════════════════ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo-area">
+        <div class="logo-icon"><i class="fas fa-scale-balanced"></i></div>
+        <span class="logo-text">PrazoControl</span>
+      </div>
+      <button class="btn-toggle-sidebar" onclick="toggleSidebar()" title="Recolher / Expandir menu">
+        <i class="fas fa-angles-left" id="toggle-sidebar-icon"></i>
+      </button>
+    </div>
+
+    <!-- NAVEGAÇÃO -->
+    <nav class="sidebar-nav">
+      <button class="nav-item ativo" id="btn-nav-calc" onclick="navegarPara('calc')">
+        <i class="fas fa-calculator"></i>
+        <span>Calculadora</span>
+      </button>
+      <button class="nav-item" id="btn-nav-config" onclick="navegarPara('config')">
+        <i class="fas fa-sliders"></i>
+        <span>Configurações</span>
+        <span class="nav-lock-badge" id="nav-lock-badge" title="Módulo restrito ao Administrador">
+          <i class="fas fa-lock"></i> ADM
+        </span>
+      </button>
+    </nav>
+
+    <!-- RODAPÉ DA SIDEBAR -->
+    <div class="sidebar-footer">
+      <div class="theme-toggle-area">
+        <i class="fas fa-sun" style="font-size:12px"></i>
+        <label class="switch">
+          <input type="checkbox" id="theme-switch" onchange="toggleTheme()"/>
+          <span class="slider"></span>
+        </label>
+        <i class="fas fa-moon" style="font-size:12px"></i>
+      </div>
+
+      <!-- PERFIL DO USUÁRIO -->
+      <div class="user-profile">
+        <div class="user-avatar" id="user-avatar">G</div>
+        <div class="user-info">
+          <div class="user-name" id="user-nome">Gustavo</div>
+          <div class="user-role is-adm" id="user-role">ADMINISTRADOR</div>
+        </div>
+        <button class="btn-action-user logout" id="btn-auth-action" onclick="toggleAuthAdmin()" title="Sair do modo administrador">
+          <i class="fas fa-right-from-bracket" id="icon-auth-action"></i>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ═══════════════════════════════
+       CONTEÚDO PRINCIPAL
+  ═══════════════════════════════ -->
+  <main class="main-content">
+    
+    <header class="content-header">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button class="btn-menu-mobile" onclick="toggleMobileMenu()">
+          <i class="fas fa-bars"></i>
+        </button>
+        <div class="page-title-wrap">
+          <h1 id="page-title">Calculadora de Prazos</h1>
+          <p id="page-subtitle">Simule contagens considerando os feriados cadastrados</p>
+        </div>
+      </div>
+
+      <div id="admin-badge-top" style="display:flex;align-items:center;gap:8px">
+        <!-- Renderizado dinamicamente via JS -->
+      </div>
+    </header>
+
+    <!-- ══ SEÇÃO: CALCULADORA ══ -->
+    <section id="tela-calc" class="tela-section">
+      <div style="display:grid;grid-template-columns:1fr 1.25fr;gap:28px;max-width:1150px">
+        
+        <!-- CARD ESQUERDO: DADOS -->
+        <div class="form-card" style="height:fit-content; width:100%;">
+          <div class="form-section-title">
+            <i class="fas fa-calendar-days" style="color:var(--primary)"></i> Dados para Cálculo
+          </div>
+
+          <div class="fgroup">
+            <label>Data de Início <span class="req">*</span></label>
+            <input type="date" id="calc-data-inicio" oninput="executarCalculo()"/>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+            <div class="fgroup">
+              <label>Dias Úteis</label>
+              <input type="number" id="calc-dias-uteis" placeholder="0" min="0" value="0" oninput="executarCalculo()"/>
+            </div>
+            <div class="fgroup">
+              <label>Dias Corridos</label>
+              <input type="number" id="calc-dias-corridos" placeholder="0" min="0" value="0" oninput="executarCalculo()"/>
+            </div>
+          </div>
+
+          <div style="margin-top:6px">
+            <button class="btn-pri" style="width:100%;" onclick="executarCalculo()">
+              <i class="fas fa-calculator"></i> Calcular Prazo
+            </button>
+          </div>
+        </div>
+
+        <!-- CARD DIREITO: RESULTADO -->
+        <div id="calc-resultado-wrap" style="display:flex;flex-direction:column;gap:18px">
+          
+          <!-- RESULTADO DIAS ÚTEIS -->
+          <div id="calc-res-uteis" class="form-card hidden" style="border-left:4px solid var(--primary); width:100%;">
+            <div class="form-section-title" style="margin-bottom:12px">
+              <i class="fas fa-briefcase" style="color:var(--primary)"></i> Resultado — Dias Úteis (CPC/2015)
+            </div>
+            <div style="font-size:11px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:2px">
+              Data de Vencimento
+            </div>
+            <div id="calc-res-uteis-data" style="font-size:32px;font-weight:800;color:var(--primary);margin-bottom:12px;letter-spacing:-0.5px"></div>
+            
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <div style="background:var(--bg-app);border-radius:10px;padding:12px;border:1px solid var(--border)">
+                <div style="font-size:10px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px">Dias Contados</div>
+                <div id="calc-res-uteis-qtd" style="font-size:16px;font-weight:800;color:var(--text-main);"></div>
+              </div>
+              <div style="background:var(--bg-app);border-radius:10px;padding:12px;border:1px solid var(--border)">
+                <div style="font-size:10px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px">Dia da Semana</div>
+                <div id="calc-res-uteis-diaSemana" style="font-size:15px;font-weight:700;color:var(--text-main)"></div>
+              </div>
+            </div>
+
+            <div id="calc-res-uteis-detalhes" style="margin-top:14px;border-top:1px dashed var(--border);padding-top:12px;font-size:13px;color:var(--text-muted)"></div>
+          </div>
+
+          <!-- RESULTADO DIAS CORRIDOS -->
+          <div id="calc-res-corridos" class="form-card hidden" style="border-left:4px solid var(--purple); width:100%;">
+            <div class="form-section-title" style="margin-bottom:12px">
+              <i class="fas fa-calendar" style="color:var(--purple)"></i> Resultado — Dias Corridos
+            </div>
+            <div style="font-size:11px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:2px">
+              Data de Vencimento
+            </div>
+            <div id="calc-res-corridos-data" style="font-size:32px;font-weight:800;color:var(--purple);margin-bottom:12px;letter-spacing:-0.5px"></div>
+            
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <div style="background:var(--bg-app);border-radius:10px;padding:12px;border:1px solid var(--border)">
+                <div style="font-size:10px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px">Dias Contados</div>
+                <div id="calc-res-corridos-qtd" style="font-size:16px;font-weight:800;color:var(--text-main);"></div>
+              </div>
+              <div style="background:var(--bg-app);border-radius:10px;padding:12px;border:1px solid var(--border)">
+                <div style="font-size:10px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px">Dia da Semana</div>
+                <div id="calc-res-corridos-diaSemana" style="font-size:15px;font-weight:700;color:var(--text-main)"></div>
+              </div>
+            </div>
+
+            <div id="calc-res-corridos-detalhes" style="margin-top:14px;border-top:1px dashed var(--border);padding-top:12px;font-size:13px;color:var(--text-muted)"></div>
+          </div>
+
+          <!-- ESTADO VAZIO INICIAL -->
+          <div id="calc-empty" class="form-card" style="text-align:center;padding:50px 20px;color:var(--text-light); width:100%;">
+            <i class="fas fa-calculator" style="font-size:38px;display:block;margin-bottom:12px;color:var(--text-light)"></i>
+            <p style="font-size:14px;color:var(--text-muted)">Preencha a data de início e os dias para obter o cálculo</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- FERIADOS CONSIDERADOS NO CÁLCULO (CHIPS) -->
+      <div class="form-card" style="max-width:1150px;margin-top:28px; width:100%;">
+        <div class="form-section-title" style="margin-bottom:12px">
+          <i class="fas fa-calendar-xmark" style="color:var(--danger)"></i> Feriados Considerados no Cálculo
+        </div>
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">
+          Feriados fixos, móveis e recessos cadastrados que são automaticamente excluídos das contagens de dias úteis e prorrogam o termo final.
+        </p>
+        <div id="calc-feriados-lista" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+      </div>
+    </section>
+
+    <!-- ══ SEÇÃO: CONFIGURAÇÕES (RESTRITA AO ADM) ══ -->
+    <section id="tela-config" class="tela-section hidden">
+      
+      <!-- BLOQUEIO PARA NÃO ADM -->
+      <div id="config-lock-screen" class="form-card hidden" style="max-width:650px;margin:20px auto;text-align:center;padding:48px 32px">
+        <div style="width:64px;height:64px;border-radius:20px;background:rgba(245, 158, 11, 0.15);color:var(--warning);display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 20px">
+          <i class="fas fa-lock"></i>
+        </div>
+        <h2 style="font-size:22px;font-weight:800;margin-bottom:8px">Acesso Restrito ao Administrador</h2>
+        <p style="font-size:14px;color:var(--text-muted);margin-bottom:24px;line-height:1.6">
+          O módulo de configurações permite personalizar feriados estaduais, municipais e períodos de recesso forense. É necessário autenticar-se como administrador para acessar.
+        </p>
+        <button class="btn-pri" onclick="abrirModalLoginAdm()">
+          <i class="fas fa-key"></i> Entrar como Administrador
+        </button>
+      </div>
+
+      <!-- PAINEL REAL DE CONFIGURAÇÕES (QUANDO ADM AUTENTICADO) -->
+      <div id="config-admin-panel" style="display:flex;flex-direction:column;gap:24px;max-width:1000px">
+        
+        <!-- CARD: FERIADOS EXTRAS E RECESSOS -->
+        <div class="form-card">
+          <div class="form-section-title">
+            <i class="fas fa-calendar-plus" style="color:var(--primary)"></i> Feriados Extras e Períodos de Recesso
+          </div>
+          <p style="font-size:13px;color:var(--text-muted);margin-bottom:18px">
+            Adicione feriados estaduais, municipais ou períodos de suspensão/recesso (ex.: Recesso Forense Art. 220 CPC).
+          </p>
+
+          <!-- SELETOR DE TIPO -->
+          <div class="cfg-tabs">
+            <button class="cfg-tab-btn ativo" id="btn-tipo-dia" onclick="setTipoCadastroFeriado('dia')">
+              <i class="fas fa-calendar-day"></i> Dia Único
+            </button>
+            <button class="cfg-tab-btn" id="btn-tipo-periodo" onclick="setTipoCadastroFeriado('periodo')">
+              <i class="fas fa-calendar-week"></i> Período / Recesso
+            </button>
+          </div>
+
+          <!-- FORM: DIA ÚNICO -->
+          <div id="add-feriado-row" style="display:grid;grid-template-columns:1fr 180px auto;gap:12px;align-items:flex-end">
+            <div class="fgroup" style="margin:0">
+              <label>Nome do Feriado</label>
+              <input type="text" id="novo-feriado-nome" placeholder="Ex: Aniversário da Cidade / Padroeira"/>
+            </div>
+            <div class="fgroup" style="margin:0">
+              <label>Data (DD/MM ou DD/MM/AAAA)</label>
+              <input type="text" id="novo-feriado-data" placeholder="Ex: 24/10" maxlength="10"/>
+            </div>
+            <button class="btn-pri" style="height:44px" onclick="adicionarFeriado()" title="Adicionar Feriado">
+              <i class="fas fa-plus"></i> Adicionar
+            </button>
+          </div>
+
+          <!-- FORM: PERÍODO / RECESSO -->
+          <div id="add-periodo-row" class="hidden" style="display:grid;grid-template-columns:1fr 140px 140px auto;gap:12px;align-items:flex-end">
+            <div class="fgroup" style="margin:0">
+              <label>Nome do Período / Suspensão</label>
+              <input type="text" id="novo-periodo-nome" placeholder="Ex: Recesso Forense (Art. 220 CPC)"/>
+            </div>
+            <div class="fgroup" style="margin:0">
+              <label>Data Início (DD/MM)</label>
+              <input type="text" id="novo-periodo-inicio" placeholder="20/12" maxlength="10"/>
+            </div>
+            <div class="fgroup" style="margin:0">
+              <label>Data Fim (DD/MM)</label>
+              <input type="text" id="novo-periodo-fim" placeholder="20/01" maxlength="10"/>
+            </div>
+            <button class="btn-pri" style="height:44px" onclick="adicionarPeriodo()" title="Adicionar Período">
+              <i class="fas fa-plus"></i> Adicionar
+            </button>
+          </div>
+
+          <!-- LISTA DOS CADASTRADOS -->
+          <div style="margin-top:24px">
+            <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-muted);margin-bottom:10px">
+              Feriados e Recessos Cadastrados
+            </div>
+            <div class="feriados-extra-list" id="feriados-extra-list"></div>
+          </div>
+        </div>
+
+        <!-- CARD: SEGURANÇA E SENHA DO ADM -->
+        <div class="form-card">
+          <div class="form-section-title">
+            <i class="fas fa-shield-halved" style="color:var(--warning)"></i> Segurança do Administrador
+          </div>
+          <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">
+            Altere a senha de acesso ao painel de configurações de administrador.
+          </p>
+          <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:14px;align-items:flex-end;max-width:700px">
+            <div class="fgroup" style="margin:0">
+              <label>Nova Senha</label>
+              <input type="password" id="adm-nova-senha" placeholder="Mínimo 6 caracteres"/>
+            </div>
+            <div class="fgroup" style="margin:0">
+              <label>Confirmar Nova Senha</label>
+              <input type="password" id="adm-confirma-senha" placeholder="Repita a nova senha"/>
+            </div>
+            <button class="btn-pri" style="height:44px" onclick="alterarSenhaAdm()">
+              <i class="fas fa-key"></i> Salvar Senha
+            </button>
+          </div>
+        </div>
+
+        <!-- CARD: DADOS & IMPORTAÇÃO / EXPORTAÇÃO -->
+        <div class="form-card">
+          <div class="form-section-title">
+            <i class="fas fa-database" style="color:var(--text-muted)"></i> Importação, Exportação e Backup
+          </div>
+          <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">
+            Importe o calendário oficial de feriados do TJGO 2026, envie um arquivo <code>.json</code> do seu computador ou exporte seus dados.
+          </p>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+            <button class="btn-pri" onclick="importarFeriadosTJGO2026()" title="Importar os feriados e recessos do calendário oficial do TJGO 2026">
+              <i class="fas fa-file-pdf" style="color:#fecdd3"></i> Importar Feriados TJGO 2026
+            </button>
+
+            <button class="btn-sec" onclick="document.getElementById('input-importar-json').click()" title="Carregar qualquer arquivo JSON de feriados">
+              <i class="fas fa-file-arrow-up"></i> Carregar Arquivo JSON
+            </button>
+            <input type="file" id="input-importar-json" accept=".json" style="display:none" onchange="importarArquivoJSON(event)"/>
+
+            <button class="btn-sec" onclick="exportarFeriadosJSON()" title="Baixar feriados cadastrados em formato JSON">
+              <i class="fas fa-file-export"></i> Exportar Feriados (JSON)
+            </button>
+
+            <button class="btn-sec" onclick="restaurarFeriadosPadrao()" title="Restaurar lista inicial padrão">
+              <i class="fas fa-arrow-rotate-left"></i> Restaurar Padrão
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ═══════════════════════════════
+     MODAL: LOGIN DO ADMINISTRADOR
+═══════════════════════════════ -->
+<div class="modal-overlay" id="modal-login-adm">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3><i class="fas fa-shield-halved" style="color:var(--primary)"></i> Autenticação ADM</h3>
+      <button class="btn-close-modal" onclick="fecharModal('modal-login-adm')">
+        <i class="fas fa-xmark"></i>
+      </button>
+    </div>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:18px">
+      Digite a senha de administrador para acessar e gerenciar as configurações do sistema.
+    </p>
+    <div class="fgroup">
+      <label>Senha do Administrador</label>
+      <input type="password" id="input-senha-adm" placeholder="Digite a senha..." onkeydown="if(event.key==='Enter') autenticarAdm()"/>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px">
+      <button class="btn-sec" onclick="fecharModal('modal-login-adm')">Cancelar</button>
+      <button class="btn-pri" onclick="autenticarAdm()">
+        <i class="fas fa-arrow-right-to-bracket"></i> Entrar
+      </button>
+    </div>
+    <p style="font-size:11px;color:var(--text-light);margin-top:14px;text-align:center">
+      Senha padrão inicial: <code style="background:var(--bg-app);padding:2px 6px;border-radius:4px">admin123</code>
+    </p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════
+     MODAL: CONFIRMAR EXCLUSÃO
+═══════════════════════════════ -->
+<div class="modal-overlay" id="modal-confirmar">
+  <div class="modal-box" style="max-width:380px">
+    <div class="modal-header">
+      <h3 style="color:var(--danger)"><i class="fas fa-triangle-exclamation"></i> Excluir Item</h3>
+      <button class="btn-close-modal" onclick="fecharModal('modal-confirmar')">
+        <i class="fas fa-xmark"></i>
+      </button>
+    </div>
+    <p id="confirmar-msg" style="font-size:13px;color:var(--text-muted);margin-bottom:20px"></p>
+    <div style="display:flex;justify-content:flex-end;gap:10px">
+      <button class="btn-sec" onclick="fecharModal('modal-confirmar')">Cancelar</button>
+      <button class="btn-pri" id="btn-executar-confirmar" style="background:var(--danger)">
+        <i class="fas fa-trash"></i> Confirmar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div id="toast-wrap"></div>
+
+<!-- Lógica em JavaScript modular -->
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,177 @@
+[
+  {
+    "tipo": "dia",
+    "nome": "Ano Novo (Feriado Nacional)",
+    "data": "01/01/2026",
+    "diaSemana": "Quinta-feira",
+    "categoria": "Feriado Nacional"
+  },
+  {
+    "tipo": "dia",
+    "nome": "Carnaval (Feriado no Tribunal)",
+    "data": "16/02/2026",
+    "diaSemana": "Segunda-feira",
+    "categoria": "Feriado no Tribunal"
+  },
+  {
+    "tipo": "dia",
+    "nome": "Carnaval (Feriado no Tribunal)",
+    "data": "17/02/2026",
+    "diaSemana": "Terça-feira",
+    "categoria": "Feriado no Tribunal"
+  },
+  {
+    "tipo": "dia",
+    "nome": "Carnaval até 12h (Feriado no Tribunal)",
+    "data": "18/02/2026",
+    "diaSemana": "Quarta-feira",
+    "categoria": "Feriado no Tribunal"
+  },
+  {
+    "tipo": "dia",
+    "nome": "MotoGP em Goiânia (Ponto Facultativo TJGO)",
+    "data": "20/03/2026",
+    "diaSemana": "Sexta-feira",
+    "categoria": "Ponto Facultativo Estadual"
+  },
+  {
+    "tipo": "dia",
+    "nome": "Semana Santa - Quarta-feira (Feriado no Tribunal)",
+    "data": "01/04/2026",
+    "diaSemana": "Quarta-feira",
+    "categoria": "Feriado no Tribunal"
+  },
+  {
+    "tipo": "dia",
+    "nome": "Semana Santa - Quinta-feira (Feriado no Tribunal)",
+    "data": "02/04/2026",
+    "diaSemana": "Quinta-feira",
+    "categoria": "Feriado no Tribunal"
+  },
+  {
+    "tipo": "dia",
+    "nome": "Semana Santa - Sexta-feira da Paixão (Feriado no Tribunal)",
+    "data": "03/04/2026",
+    "diaSemana": "Sexta-feira",
+    "categoria": "Feriado no Tribunal"
+  },
+  {
+    "tipo": "dia",
+    "nome": "Ponto Facultativo (Poder Judiciário Estadual)",
+    "data": "20/04/2026",
+    "diaSemana": "Segunda-feira",
+    "categoria": "Ponto Facultativo Estadual"
+  },
+  {
+    "tipo": "dia",
+    "nome": "Tiradentes (Feriado Nacional)",
+    "data": "21/04/2026",
+    "diaSemana": "Terça-feira",
+    "categoria": "Feriado Nacional"
+  },
+  {
+    "tipo": "dia",
+    "nome": "Dia do Trabalho (Feriado Nacional)",
+    "data": "01/05/2026",
+    "diaSemana": "Sexta-feira",
+    "categoria": "Feriado Nacional"
+  },
+  {
+    "tipo": "dia",
+    "nome": "Dia de Nossa Senhora Auxiliadora (Padroeira de Goiânia)",
+    "data": "24/05/2026",
+    "diaSemana": "Domingo",
+    "categoria": "Feriado Municipal/Tribunal"
+  },
+  {
+    "tipo": "dia",
+    "nome": "Corpus Christi (Feriado Nacional)",
+    "data": "04/06/2026",
+    "diaSemana": "Quinta-feira",
+    "categoria": "Feriado Nacional"
+  },
+  {
+    "tipo": "dia",
+    "nome": "Ponto Facultativo (Poder Judiciário Estadual)",
+    "data": "05/06/2026",
+    "diaSemana": "Sexta-feira",
+    "categoria": "Ponto Facultativo Estadual"
+  },
+  {
+    "tipo": "dia",
+    "nome": "Fundação da Cidade de Goiás (Feriado no Tribunal)",
+    "data": "26/07/2026",
+    "diaSemana": "Domingo",
+    "categoria": "Feriado no Tribunal"
+  },
+  {
+    "tipo": "dia",
+    "nome": "Independência do Brasil (Feriado Nacional)",
+    "data": "07/09/2026",
+    "diaSemana": "Segunda-feira",
+    "categoria": "Feriado Nacional"
+  },
+  {
+    "tipo": "dia",
+    "nome": "Nossa Senhora Aparecida - Padroeira do Brasil (Feriado Nacional)",
+    "data": "12/10/2026",
+    "diaSemana": "Segunda-feira",
+    "categoria": "Feriado Nacional"
+  },
+  {
+    "tipo": "dia",
+    "nome": "Aniversário de Goiânia (Feriado no Tribunal)",
+    "data": "24/10/2026",
+    "diaSemana": "Sábado",
+    "categoria": "Feriado no Tribunal"
+  },
+  {
+    "tipo": "dia",
+    "nome": "Dia do Servidor Público (Feriado Estadual Lei 20.756/20)",
+    "data": "28/10/2026",
+    "diaSemana": "Quarta-feira",
+    "categoria": "Feriado Estadual"
+  },
+  {
+    "tipo": "dia",
+    "nome": "Finados (Feriado Nacional)",
+    "data": "02/11/2026",
+    "diaSemana": "Segunda-feira",
+    "categoria": "Feriado Nacional"
+  },
+  {
+    "tipo": "dia",
+    "nome": "Proclamação da República (Feriado Nacional)",
+    "data": "15/11/2026",
+    "diaSemana": "Domingo",
+    "categoria": "Feriado Nacional"
+  },
+  {
+    "tipo": "dia",
+    "nome": "Dia da Consciência Negra (Feriado Nacional)",
+    "data": "20/11/2026",
+    "diaSemana": "Sexta-feira",
+    "categoria": "Feriado Nacional"
+  },
+  {
+    "tipo": "dia",
+    "nome": "Dia da Justiça (Art. 123 do RITJGO)",
+    "data": "08/12/2026",
+    "diaSemana": "Terça-feira",
+    "categoria": "Feriado no Tribunal"
+  },
+  {
+    "tipo": "periodo",
+    "nome": "Recesso Forense - TJGO (Art. 123 RITJGO)",
+    "dataInicio": "20/12/2026",
+    "dataFim": "06/01/2027",
+    "categoria": "Recesso Forense"
+  },
+  {
+    "tipo": "dia",
+    "nome": "Natal (Feriado Nacional)",
+    "data": "25/12/2026",
+    "diaSemana": "Sexta-feira",
+    "categoria": "Feriado Nacional"
+  }
+]
