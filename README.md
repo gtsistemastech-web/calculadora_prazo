@@ -7,7 +7,17 @@ Sisteminha especializado e enxuto contendo exclusivamente os módulos de **Calcu
 ## 🚀 Funcionalidades
 
 ### 1. 🧮 Calculadora de Prazos Processuais (Acesso Público / Livre)
-- **Cálculo Simultâneo**: Calcula e compara prazos em **Dias Úteis** (regra geral do CPC/2015 Art. 219) e **Dias Corridos** (CPP, Juizados, CLT quando aplicável).
+- **Modos de Cálculo**:
+  - **Prazo Simples**: Calcula prazos em **Dias Úteis** (CPC/2015 Art. 219) e **Dias Corridos** (CPP, CLT quando aplicável).
+  - **Prazo Duplo / Composto**: Simulação de contagem combinada de 2 etapas sucessivas (ex.: **10 dias corridos de ciência tácita/dilação + 10 ou 15 dias úteis de prazo recursal/resposta**, conforme Art. 5º, § 3º da Lei Federal nº 11.419/2006 e Arts. 219 e 224 do CPC).
+- **Modelos Rápidos (1 clique)**:
+  - `10c + 10u` (Ciência tácita + Prazo de 10 dias úteis)
+  - `10c + 15u` (Intimação eletrônica Portal/DJe + Contestação/Apelação CPC)
+  - `10c + 5u` (Intimação eletrônica + Embargos de Declaração)
+  - `20c + 15u` (Dilação de Edital 20 dias + Contestação 15 dias)
+- **Linha do Tempo Visual e Certidão de Tempestividade**:
+  - Stepper passo a passo discriminando: data de envio/início, término da 1ª etapa com eventuais prorrogações legais, início da contagem da 2ª etapa e termo final.
+  - Botão **"Copiar Certidão"** pronto para colagem em petições e sistemas processuais (Projudi, Eproc, PJe, SEI).
 - **Regra de Contagem (Data Base Direta)**: exclui o dia de início informado e inclui o dia do vencimento, prorrogando automaticamente para o primeiro dia útil seguinte caso o término caia em fim de semana ou feriado.
 - **Detalhamento do Vencimento**:
   - Data final e dia da semana.

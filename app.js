@@ -39,6 +39,9 @@ let feriadosExtra = [];
 let isAdmAutenticado = false;
 let tipoCadastroFeriado = "dia";
 let telaAtual = "calc";
+let modoCalculo = "simples"; // 'simples' ou 'duplo'
+let dadosUltimoCalculoSimples = { uteis: null, corridos: null, dataInicio: null };
+let dadosUltimoCalculoDuplo = null;
 
 // Hash SHA-256 padrão para senha inicial 'admin123'
 const HASH_SENHA_PADRAO = "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9";
@@ -449,34 +452,228 @@ function ehDiaUtil(dt) {
 }
 
 // ══════════════════════════════════════════════════
+// CONTROLE DE MODO & PRESETS
+// ══════════════════════════════════════════════════
+window.setModoCalculo = (modo) => {
+  modoCalculo = modo;
+  const btnSimples = document.getElementById("btn-modo-simples");
+  const btnDuplo = document.getElementById("btn-modo-duplo");
+  const formSimples = document.getElementById("form-modo-simples");
+  const formDuplo = document.getElementById("form-modo-duplo");
+  const lblData = document.getElementById("lbl-data-inicio");
+
+  if (modo === "duplo") {
+    btnSimples?.classList.remove("ativo");
+    btnDuplo?.classList.add("ativo");
+    formSimples?.classList.add("hidden");
+    formDuplo?.classList.remove("hidden");
+    if (lblData) lblData.innerHTML = 'Data de Envio / Início <span class="req">*</span>';
+  } else {
+    btnDuplo?.classList.remove("ativo");
+    btnSimples?.classList.add("ativo");
+    formDuplo?.classList.add("hidden");
+    formSimples?.classList.remove("hidden");
+    if (lblData) lblData.innerHTML = 'Data de Início <span class="req">*</span>';
+  }
+  executarCalculo();
+};
+
+window.aplicarPresetDuplo = (qtd1, tipo1, qtd2, tipo2, btn) => {
+  const inputQtd1 = document.getElementById("calc-duplo-qtd1");
+  const inputTipo1 = document.getElementById("calc-duplo-tipo1");
+  const inputQtd2 = document.getElementById("calc-duplo-qtd2");
+  const inputTipo2 = document.getElementById("calc-duplo-tipo2");
+
+  if (inputQtd1) inputQtd1.value = qtd1;
+  if (inputTipo1) inputTipo1.value = tipo1;
+  if (inputQtd2) inputQtd2.value = qtd2;
+  if (inputTipo2) inputTipo2.value = tipo2;
+
+  document.querySelectorAll(".btn-preset-duplo").forEach(b => b.classList.remove("ativo"));
+  if (btn) btn.classList.add("ativo");
+
+  executarCalculo();
+};
+
+// ══════════════════════════════════════════════════
 // MOTOR DE CÁLCULO DE PRAZOS
 // ══════════════════════════════════════════════════
 window.executarCalculo = () => {
-  const dataInicioStr = document.getElementById("calc-data-inicio").value;
-  const diasUteis = parseInt(document.getElementById("calc-dias-uteis").value) || 0;
-  const diasCorridos = parseInt(document.getElementById("calc-dias-corridos").value) || 0;
-
+  const dataInicioStr = document.getElementById("calc-data-inicio")?.value;
   const wrapEmpty = document.getElementById("calc-empty");
   const cardUteis = document.getElementById("calc-res-uteis");
   const cardCorridos = document.getElementById("calc-res-corridos");
+  const cardDuplo = document.getElementById("calc-res-duplo");
 
-  if (!dataInicioStr || (diasUteis <= 0 && diasCorridos <= 0)) {
-    wrapEmpty.classList.remove("hidden");
-    cardUteis.classList.add("hidden");
-    cardCorridos.classList.add("hidden");
+  if (!dataInicioStr) {
+    wrapEmpty?.classList.remove("hidden");
+    cardUteis?.classList.add("hidden");
+    cardCorridos?.classList.add("hidden");
+    cardDuplo?.classList.add("hidden");
     return;
   }
 
-  wrapEmpty.classList.add("hidden");
-
-  // Data Base Direta: exclui o dia do início e inclui o do vencimento
   const dtTermoInicial = dataParaObj(dataInicioStr);
   const dataInicioFormatada = formatarDataBR(dtTermoInicial);
 
+  // ── MODO PRAZO DUPLO / COMPOSTO ──
+  if (modoCalculo === "duplo") {
+    cardUteis?.classList.add("hidden");
+    cardCorridos?.classList.add("hidden");
+
+    const qtd1 = parseInt(document.getElementById("calc-duplo-qtd1")?.value) || 0;
+    const tipo1 = document.getElementById("calc-duplo-tipo1")?.value || "corridos";
+    const qtd2 = parseInt(document.getElementById("calc-duplo-qtd2")?.value) || 0;
+    const tipo2 = document.getElementById("calc-duplo-tipo2")?.value || "uteis";
+
+    if (qtd1 <= 0 || qtd2 <= 0) {
+      wrapEmpty?.classList.remove("hidden");
+      cardDuplo?.classList.add("hidden");
+      return;
+    }
+
+    wrapEmpty?.classList.add("hidden");
+    cardDuplo?.classList.remove("hidden");
+
+    const resDuplo = calcularPrazoDuplo(dtTermoInicial, qtd1, tipo1, qtd2, tipo2);
+    dadosUltimoCalculoDuplo = resDuplo;
+
+    // Renderiza Vencimento Final
+    const dataVencStr = formatarDataBR(resDuplo.vencimentoFinal);
+    const diaSemanaVenc = DIAS_SEMANA[resDuplo.vencimentoFinal.getDay()];
+    document.getElementById("calc-res-duplo-data").textContent = dataVencStr;
+    document.getElementById("calc-res-duplo-diaSemana").textContent = diaSemanaVenc;
+
+    // Resumo dos cards rápidos
+    const descTipo1 = tipo1 === "corridos" ? "corridos" : "úteis";
+    const descTipo2 = tipo2 === "corridos" ? "corridos" : "úteis";
+    document.getElementById("calc-res-duplo-card-etapa1").textContent = `${formatarDataBR(resDuplo.etapa1.termo)} (${DIAS_SEMANA[resDuplo.etapa1.termo.getDay()]})`;
+    document.getElementById("calc-res-duplo-card-etapa2").textContent = `${dataVencStr} (${diaSemanaVenc})`;
+
+    // Linha do Tempo Visual (Stepper)
+    let htmlTimeline = "";
+
+    // 1. Início / Envio
+    htmlTimeline += `
+      <div class="timeline-item">
+        <div class="timeline-dot inicio"><i class="fas fa-paper-plane"></i></div>
+        <div class="timeline-content">
+          <div class="timeline-title">Data de Envio / Início</div>
+          <div class="timeline-date">
+            <strong>${dataInicioFormatada}</strong> (${DIAS_SEMANA[dtTermoInicial.getDay()]})
+            <span class="badge-tag info"><i class="fas fa-play"></i> Marco Zero</span>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // 2. Término da 1ª Etapa / Ciência
+    const dataCienciaStr = formatarDataBR(resDuplo.etapa1.termo);
+    const diaCiencia = DIAS_SEMANA[resDuplo.etapa1.termo.getDay()];
+    let avisoProrrogacao1 = "";
+    if (resDuplo.etapa1.prorrogou) {
+      avisoProrrogacao1 = `
+        <div style="margin-top:6px; font-size:11.5px; color:var(--warning); line-height:1.4">
+          <i class="fas fa-triangle-exclamation"></i> Prazo teórico de ${qtd1} dias ${descTipo1} findou em dia não útil (${formatarDataBR(resDuplo.etapa1.dataTeorica)}). Prorrogado em ${resDuplo.etapa1.diasProrrogados} dia(s) para o 1º dia útil seguinte (Art. 5º, § 3º Lei 11.419/2006).
+        </div>
+      `;
+    }
+
+    htmlTimeline += `
+      <div class="timeline-item">
+        <div class="timeline-dot etapa1"><i class="fas fa-envelope-open-text"></i></div>
+        <div class="timeline-content">
+          <div class="timeline-title">1ª Etapa: Ciência / Dilação (${qtd1} dias ${descTipo1})</div>
+          <div class="timeline-date">
+            Efetivada em: <strong>${dataCienciaStr}</strong> (${diaCiencia})
+            <span class="badge-tag warning"><i class="fas fa-check"></i> Ciência Aperfeiçoada</span>
+          </div>
+          ${avisoProrrogacao1}
+        </div>
+      </div>
+    `;
+
+    // 3. Início da 2ª Etapa (CPC 224)
+    const dataIniContStr = formatarDataBR(resDuplo.transicao.primeiroDiaContagem);
+    const diaIniCont = DIAS_SEMANA[resDuplo.transicao.primeiroDiaContagem.getDay()];
+    htmlTimeline += `
+      <div class="timeline-item">
+        <div class="timeline-dot inicio" style="border-color:var(--purple);color:var(--purple);background:var(--purple-light)"><i class="fas fa-hourglass-start"></i></div>
+        <div class="timeline-content">
+          <div class="timeline-title">Início da Contagem da 2ª Etapa (Art. 224 CPC)</div>
+          <div class="timeline-date">
+            1º dia útil seguinte: <strong>${dataIniContStr}</strong> (${diaIniCont})
+            <span class="badge-tag info" style="background:var(--purple-light);color:var(--purple)"><i class="fas fa-arrow-right"></i> Termo a quo</span>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // 4. Vencimento Final
+    let avisoProrrogacao2 = "";
+    if (resDuplo.etapa2.prorrogou) {
+      avisoProrrogacao2 = `
+        <div style="margin-top:6px; font-size:11.5px; color:var(--warning); line-height:1.4">
+          <i class="fas fa-triangle-exclamation"></i> Vencimento teórico coincidiu com dia não útil (${formatarDataBR(resDuplo.etapa2.dataTeorica)}). Prorrogado para o 1º dia útil subsequente (Art. 224, § 1º CPC).
+        </div>
+      `;
+    }
+
+    htmlTimeline += `
+      <div class="timeline-item">
+        <div class="timeline-dot etapa2"><i class="fas fa-flag-checkered"></i></div>
+        <div class="timeline-content">
+          <div class="timeline-title">2ª Etapa: Vencimento Final (${qtd2} dias ${descTipo2})</div>
+          <div class="timeline-date">
+            Vencimento em: <strong>${dataVencStr}</strong> (${diaSemanaVenc})
+            <span class="badge-tag success"><i class="fas fa-trophy"></i> Termo Final</span>
+          </div>
+          ${avisoProrrogacao2}
+        </div>
+      </div>
+    `;
+
+    document.getElementById("calc-res-duplo-timeline").innerHTML = htmlTimeline;
+
+    // Detalhes extras e feriados
+    let htmlDetalhes = `<div>Contagem combinada: <strong>${qtd1} dias ${descTipo1}</strong> de ciência/dilação + <strong>${qtd2} dias ${descTipo2}</strong> de prazo processual.</div>`;
+
+    if (tipo2 === "uteis") {
+      htmlDetalhes += `<div style="margin-top:4px;">Na 2ª etapa foram descontados <strong>${resDuplo.etapa2.finsDeSemana} dias de fim de semana</strong> e <strong>${resDuplo.etapa2.feriados.length} feriados/recessos</strong>.</div>`;
+    }
+
+    const todosFeriados = [...resDuplo.etapa1.feriados, ...resDuplo.etapa2.feriados];
+    if (todosFeriados.length > 0) {
+      htmlDetalhes += `<div style="margin-top:8px; display:flex; flex-wrap:wrap; gap:6px;">`;
+      todosFeriados.forEach(f => {
+        htmlDetalhes += `<span class="badge-feriado extra" style="font-size:11px"><i class="fas fa-calendar-xmark"></i> ${f.data} - ${f.nome}</span>`;
+      });
+      htmlDetalhes += `</div>`;
+    }
+
+    document.getElementById("calc-res-duplo-detalhes").innerHTML = htmlDetalhes;
+    return;
+  }
+
+  // ── MODO SIMPLES ──
+  cardDuplo?.classList.add("hidden");
+  const diasUteis = parseInt(document.getElementById("calc-dias-uteis")?.value) || 0;
+  const diasCorridos = parseInt(document.getElementById("calc-dias-corridos")?.value) || 0;
+
+  if (diasUteis <= 0 && diasCorridos <= 0) {
+    wrapEmpty?.classList.remove("hidden");
+    cardUteis?.classList.add("hidden");
+    cardCorridos?.classList.add("hidden");
+    return;
+  }
+
+  wrapEmpty?.classList.add("hidden");
+
   // CÁLCULO: DIAS ÚTEIS
   if (diasUteis > 0) {
-    cardUteis.classList.remove("hidden");
+    cardUteis?.classList.remove("hidden");
     const resUteis = calcularPrazoUteis(dtTermoInicial, diasUteis);
+    dadosUltimoCalculoSimples.uteis = { ...resUteis, qtd: diasUteis, dataInicio: dtTermoInicial };
 
     document.getElementById("calc-res-uteis-data").textContent = formatarDataBR(resUteis.vencimento);
     document.getElementById("calc-res-uteis-qtd").textContent = `${diasUteis} dias úteis`;
@@ -495,13 +692,15 @@ window.executarCalculo = () => {
 
     document.getElementById("calc-res-uteis-detalhes").innerHTML = htmlDetalhes;
   } else {
-    cardUteis.classList.add("hidden");
+    cardUteis?.classList.add("hidden");
+    dadosUltimoCalculoSimples.uteis = null;
   }
 
   // CÁLCULO: DIAS CORRIDOS
   if (diasCorridos > 0) {
-    cardCorridos.classList.remove("hidden");
+    cardCorridos?.classList.remove("hidden");
     const resCorridos = calcularPrazoCorridos(dtTermoInicial, diasCorridos);
+    dadosUltimoCalculoSimples.corridos = { ...resCorridos, qtd: diasCorridos, dataInicio: dtTermoInicial };
 
     document.getElementById("calc-res-corridos-data").textContent = formatarDataBR(resCorridos.vencimento);
     document.getElementById("calc-res-corridos-qtd").textContent = `${diasCorridos} dias corridos`;
@@ -516,7 +715,8 @@ window.executarCalculo = () => {
 
     document.getElementById("calc-res-corridos-detalhes").innerHTML = htmlDetalhes;
   } else {
-    cardCorridos.classList.add("hidden");
+    cardCorridos?.classList.add("hidden");
+    dadosUltimoCalculoSimples.corridos = null;
   }
 };
 
@@ -556,6 +756,179 @@ function calcularPrazoCorridos(dataInicioObj, qtdDias) {
 
   return { vencimento: atual, dataTeorica, diasProrrogados };
 }
+
+function calcularPrazoDuplo(dataInicioObj, qtd1, tipo1, qtd2, tipo2) {
+  // ETAPA 1 (ex.: 10 dias corridos de consulta eletrônica / ciência ficta)
+  let termoEtapa1;
+  let prorrogouEtapa1 = false;
+  let dataTeoricaEtapa1 = null;
+  let diasProrrogadosEtapa1 = 0;
+  let feriadosEtapa1 = [];
+  let finsDeSemanaEtapa1 = 0;
+
+  if (tipo1 === "corridos") {
+    let atual1 = new Date(dataInicioObj);
+    atual1.setDate(atual1.getDate() + qtd1);
+    dataTeoricaEtapa1 = new Date(atual1);
+
+    // Se o termo final da 1ª etapa cair em dia não útil (sáb, dom, feriado), prorroga para o 1º dia útil seguinte
+    // (Art. 5º, § 3º Lei 11.419/2006 e Art. 224, § 1º CPC)
+    while (!ehDiaUtil(atual1)) {
+      const nomeF = obterNomeFeriado(atual1);
+      if (nomeF) {
+        feriadosEtapa1.push({ data: formatarDataBR(atual1), nome: nomeF });
+      }
+      atual1.setDate(atual1.getDate() + 1);
+      diasProrrogadosEtapa1++;
+    }
+    prorrogouEtapa1 = diasProrrogadosEtapa1 > 0;
+    termoEtapa1 = atual1;
+  } else {
+    // tipo1 === "uteis"
+    const r1 = calcularPrazoUteis(dataInicioObj, qtd1);
+    termoEtapa1 = r1.vencimento;
+    feriadosEtapa1 = r1.feriados;
+    finsDeSemanaEtapa1 = r1.finsDeSemana;
+    dataTeoricaEtapa1 = r1.vencimento;
+  }
+
+  // TRANSIÇÃO PARA A ETAPA 2:
+  // A data termoEtapa1 é o dia em que se aperfeiçoou a ciência/fim da dilação.
+  // Pelo Art. 224 do CPC, exclui-se o dia do começo (termoEtapa1) e o prazo conta a partir do 1º dia útil seguinte!
+  let primeiroDiaUtilSeguinte = new Date(termoEtapa1);
+  primeiroDiaUtilSeguinte.setDate(primeiroDiaUtilSeguinte.getDate() + 1);
+  while (!ehDiaUtil(primeiroDiaUtilSeguinte)) {
+    primeiroDiaUtilSeguinte.setDate(primeiroDiaUtilSeguinte.getDate() + 1);
+  }
+
+  // ETAPA 2 (Prazo Principal, ex.: 10 ou 15 dias úteis de contestação/recurso):
+  let res2;
+  if (tipo2 === "uteis") {
+    res2 = calcularPrazoUteis(termoEtapa1, qtd2);
+  } else {
+    res2 = calcularPrazoCorridos(termoEtapa1, qtd2);
+  }
+
+  return {
+    inicio: dataInicioObj,
+    etapa1: {
+      qtd: qtd1,
+      tipo: tipo1,
+      dataTeorica: dataTeoricaEtapa1,
+      termo: termoEtapa1,
+      prorrogou: prorrogouEtapa1,
+      diasProrrogados: diasProrrogadosEtapa1,
+      feriados: feriadosEtapa1,
+      finsDeSemana: finsDeSemanaEtapa1
+    },
+    transicao: {
+      dataCiencia: termoEtapa1,
+      primeiroDiaContagem: primeiroDiaUtilSeguinte
+    },
+    etapa2: {
+      qtd: qtd2,
+      tipo: tipo2,
+      vencimento: res2.vencimento,
+      dataTeorica: res2.dataTeorica || res2.vencimento,
+      prorrogou: (res2.diasProrrogados || 0) > 0,
+      diasProrrogados: res2.diasProrrogados || 0,
+      feriados: res2.feriados || [],
+      finsDeSemana: res2.finsDeSemana || 0
+    },
+    vencimentoFinal: res2.vencimento
+  };
+}
+
+// ══════════════════════════════════════════════════
+// CERTIDÕES DE TEMPESTIVIDADE (ÁREA DE TRANSFERÊNCIA)
+// ══════════════════════════════════════════════════
+window.copiarCertidaoDuplo = () => {
+  if (!dadosUltimoCalculoDuplo) {
+    toast("aviso", "Realize o cálculo antes de copiar a certidão.");
+    return;
+  }
+  const d = dadosUltimoCalculoDuplo;
+  const dtInicio = formatarDataBR(d.inicio);
+  const diaSemanaInicio = DIAS_SEMANA[d.inicio.getDay()];
+  const dtCiencia = formatarDataBR(d.etapa1.termo);
+  const diaSemanaCiencia = DIAS_SEMANA[d.etapa1.termo.getDay()];
+  const dtInicioCont = formatarDataBR(d.transicao.primeiroDiaContagem);
+  const diaSemanaIniCont = DIAS_SEMANA[d.transicao.primeiroDiaContagem.getDay()];
+  const dtVencFinal = formatarDataBR(d.vencimentoFinal);
+  const diaSemanaVenc = DIAS_SEMANA[d.vencimentoFinal.getDay()];
+
+  const tipo1Desc = d.etapa1.tipo === "corridos" ? "dias corridos" : "dias úteis";
+  const tipo2Desc = d.etapa2.tipo === "uteis" ? "dias úteis" : "dias corridos";
+
+  const feriadosList = [...d.etapa1.feriados, ...d.etapa2.feriados];
+  const feriadosStr = feriadosList.length > 0 
+    ? feriadosList.map(f => `${f.data} (${f.nome})`).join(", ")
+    : "Nenhum feriado no período";
+
+  let texto = `CERTIDÃO DE CONTAGEM DE PRAZO DUPLO / COMPOSTO\n`;
+  texto += `═══════════════════════════════════════════════════════\n`;
+  texto += `1. MARCO INICIAL (ENVIO/DISPONIBILIZAÇÃO): ${dtInicio} (${diaSemanaInicio})\n\n`;
+  texto += `2. 1ª ETAPA (${d.etapa1.qtd} ${tipo1Desc.toUpperCase()} - CIÊNCIA / DILAÇÃO):\n`;
+  texto += `   • Término / Efetivação da Ciência: ${dtCiencia} (${diaSemanaCiencia})\n`;
+  if (d.etapa1.prorrogou) {
+    texto += `   • Observação: Prorrogado de ${formatarDataBR(d.etapa1.dataTeorica)} por coincidir com dia não útil (Art. 5º, § 3º da Lei Federal nº 11.419/2006).\n`;
+  }
+  texto += `\n3. 2ª ETAPA (${d.etapa2.qtd} ${tipo2Desc.toUpperCase()} - PRAZO PROCESSUAL):\n`;
+  texto += `   • Início da Contagem (1º dia útil seguinte): ${dtInicioCont} (${diaSemanaIniCont})\n`;
+  if (d.etapa2.tipo === "uteis") {
+    texto += `   • Fins de Semana Descontados: ${d.etapa2.finsDeSemana} dia(s)\n`;
+    texto += `   • Feriados/Recessos no Período: ${feriadosStr}\n`;
+  }
+  if (d.etapa2.prorrogou) {
+    texto += `   • Prorrogação do Termo Final: Prorrogado de ${formatarDataBR(d.etapa2.dataTeorica)} para o primeiro dia útil subsequente (Art. 224, § 1º do CPC).\n`;
+  }
+  texto += `\n═══════════════════════════════════════════════════════\n`;
+  texto += `VENCIMENTO FINAL DEFINITIVO: ${dtVencFinal} (${diaSemanaVenc})\n`;
+  texto += `Fundamentação Legal: Art. 5º, § 3º da Lei Federal nº 11.419/2006 e Arts. 219 e 224 do CPC (Lei nº 13.105/2015).\n`;
+  texto += `Simulado via PrazoControl.`;
+
+  navigator.clipboard.writeText(texto).then(() => {
+    toast("ok", "Certidão de Prazo Duplo copiada para a área de transferência!");
+  }).catch(() => {
+    toast("erro", "Não foi possível copiar automaticamente para a área de transferência.");
+  });
+};
+
+window.copiarCertidaoSimples = (tipo) => {
+  const dados = tipo === "uteis" ? dadosUltimoCalculoSimples.uteis : dadosUltimoCalculoSimples.corridos;
+  if (!dados) {
+    toast("aviso", "Realize o cálculo antes de copiar a certidão.");
+    return;
+  }
+
+  const dtInicio = formatarDataBR(dados.dataInicio);
+  const diaSemanaIni = DIAS_SEMANA[dados.dataInicio.getDay()];
+  const dtVenc = formatarDataBR(dados.vencimento);
+  const diaSemanaVenc = DIAS_SEMANA[dados.vencimento.getDay()];
+
+  let texto = `CERTIDÃO DE TEMPESTIVIDADE DE PRAZO PROCESSUAL\n`;
+  texto += `═══════════════════════════════════════════════════════\n`;
+  texto += `• Termo Inicial: ${dtInicio} (${diaSemanaIni})\n`;
+  texto += `• Prazo Processual: ${dados.qtd} ${tipo === "uteis" ? "dias úteis (Art. 219 CPC)" : "dias corridos"}\n`;
+  if (tipo === "uteis") {
+    texto += `• Fins de semana descontados: ${dados.finsDeSemana} dia(s)\n`;
+    const feriadosStr = dados.feriados.length > 0 ? dados.feriados.map(f => `${f.data} (${f.nome})`).join(", ") : "Nenhum";
+    texto += `• Feriados/Recessos descontados: ${feriadosStr}\n`;
+  }
+  if (dados.diasProrrogados > 0) {
+    texto += `• Prorrogação: Termo original coincidiu com dia não útil (${formatarDataBR(dados.dataTeorica)}), prorrogado para o 1º dia útil subsequente.\n`;
+  }
+  texto += `═══════════════════════════════════════════════════════\n`;
+  texto += `DATA FINAL DE VENCIMENTO: ${dtVenc} (${diaSemanaVenc})\n`;
+  texto += `Fundamentação Legal: Arts. 219 e 224 da Lei nº 13.105/2015 (CPC).\n`;
+  texto += `Simulado via PrazoControl.`;
+
+  navigator.clipboard.writeText(texto).then(() => {
+    toast("ok", `Certidão de Prazo em ${tipo === "uteis" ? "Dias Úteis" : "Dias Corridos"} copiada!`);
+  }).catch(() => {
+    toast("erro", "Erro ao copiar certidão.");
+  });
+};
 
 // ══════════════════════════════════════════════════
 // RENDERIZAÇÃO DOS BADGES DE FERIADOS NA TELA

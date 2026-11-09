@@ -91,7 +91,7 @@
 
     <!-- ══ SEÇÃO: CALCULADORA ══ -->
     <section id="tela-calc" class="tela-section">
-      <div style="display:grid;grid-template-columns:1fr 1.25fr;gap:28px;max-width:1150px">
+      <div class="calc-grid">
         
         <!-- CARD ESQUERDO: DADOS -->
         <div class="form-card" style="height:fit-content; width:100%;">
@@ -99,19 +99,98 @@
             <i class="fas fa-calendar-days" style="color:var(--primary)"></i> Dados para Cálculo
           </div>
 
+          <!-- SELETOR DE MODO DE CONTAGEM -->
+          <div class="cfg-tabs" style="margin-bottom:18px">
+            <button type="button" class="cfg-tab-btn ativo" id="btn-modo-simples" onclick="setModoCalculo('simples')">
+              <i class="fas fa-calculator"></i> Prazo Simples
+            </button>
+            <button type="button" class="cfg-tab-btn" id="btn-modo-duplo" onclick="setModoCalculo('duplo')">
+              <i class="fas fa-layer-group"></i> Prazo Duplo (Composto)
+            </button>
+          </div>
+
           <div class="fgroup">
-            <label>Data de Início <span class="req">*</span></label>
+            <label id="lbl-data-inicio">Data de Início <span class="req">*</span></label>
             <input type="date" id="calc-data-inicio" oninput="executarCalculo()"/>
           </div>
 
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-            <div class="fgroup">
-              <label>Dias Úteis</label>
-              <input type="number" id="calc-dias-uteis" placeholder="0" min="0" value="0" oninput="executarCalculo()"/>
+          <!-- FORMULÁRIO: MODO SIMPLES -->
+          <div id="form-modo-simples">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+              <div class="fgroup">
+                <label>Dias Úteis</label>
+                <input type="number" id="calc-dias-uteis" placeholder="0" min="0" value="0" oninput="executarCalculo()"/>
+              </div>
+              <div class="fgroup">
+                <label>Dias Corridos</label>
+                <input type="number" id="calc-dias-corridos" placeholder="0" min="0" value="0" oninput="executarCalculo()"/>
+              </div>
             </div>
-            <div class="fgroup">
-              <label>Dias Corridos</label>
-              <input type="number" id="calc-dias-corridos" placeholder="0" min="0" value="0" oninput="executarCalculo()"/>
+          </div>
+
+          <!-- FORMULÁRIO: MODO PRAZO DUPLO / COMPOSTO -->
+          <div id="form-modo-duplo" class="hidden">
+            <!-- Modelos Rápidos / Presets -->
+            <div style="margin-bottom:16px">
+              <label style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:8px">
+                Modelos Rápidos (1 clique):
+              </label>
+              <div style="display:flex;flex-wrap:wrap;gap:6px">
+                <button type="button" class="btn-preset-duplo ativo" id="preset-10c-10u" onclick="aplicarPresetDuplo(10, 'corridos', 10, 'uteis', this)">
+                  <i class="fas fa-bolt"></i> 10c + 10u
+                </button>
+                <button type="button" class="btn-preset-duplo" id="preset-10c-15u" onclick="aplicarPresetDuplo(10, 'corridos', 15, 'uteis', this)">
+                  10c + 15u (Portal/CPC)
+                </button>
+                <button type="button" class="btn-preset-duplo" id="preset-10c-5u" onclick="aplicarPresetDuplo(10, 'corridos', 5, 'uteis', this)">
+                  10c + 5u (Embargos)
+                </button>
+                <button type="button" class="btn-preset-duplo" id="preset-20c-15u" onclick="aplicarPresetDuplo(20, 'corridos', 15, 'uteis', this)">
+                  20c + 15u (Edital)
+                </button>
+              </div>
+            </div>
+
+            <!-- 1ª ETAPA -->
+            <div style="background:var(--bg-app);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px">
+              <div style="font-size:12px;font-weight:700;color:var(--text-main);display:flex;align-items:center;gap:6px;margin-bottom:10px">
+                <span style="width:20px;height:20px;border-radius:50%;background:var(--warning);color:white;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800">1</span>
+                <span>1ª Etapa (Ciência Tácita / Dilação)</span>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1.35fr;gap:10px">
+                <div class="fgroup" style="margin:0">
+                  <label style="font-size:11px">Qtd. Dias</label>
+                  <input type="number" id="calc-duplo-qtd1" min="1" value="10" oninput="executarCalculo()"/>
+                </div>
+                <div class="fgroup" style="margin:0">
+                  <label style="font-size:11px">Tipo Contagem</label>
+                  <select id="calc-duplo-tipo1" onchange="executarCalculo()">
+                    <option value="corridos" selected>Dias Corridos</option>
+                    <option value="uteis">Dias Úteis</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2ª ETAPA -->
+            <div style="background:var(--bg-app);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:16px">
+              <div style="font-size:12px;font-weight:700;color:var(--text-main);display:flex;align-items:center;gap:6px;margin-bottom:10px">
+                <span style="width:20px;height:20px;border-radius:50%;background:var(--success);color:white;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800">2</span>
+                <span>2ª Etapa (Prazo Principal / Resposta)</span>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1.35fr;gap:10px">
+                <div class="fgroup" style="margin:0">
+                  <label style="font-size:11px">Qtd. Dias</label>
+                  <input type="number" id="calc-duplo-qtd2" min="1" value="10" oninput="executarCalculo()"/>
+                </div>
+                <div class="fgroup" style="margin:0">
+                  <label style="font-size:11px">Tipo Contagem</label>
+                  <select id="calc-duplo-tipo2" onchange="executarCalculo()">
+                    <option value="uteis" selected>Dias Úteis (CPC)</option>
+                    <option value="corridos">Dias Corridos</option>
+                  </select>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -127,8 +206,13 @@
           
           <!-- RESULTADO DIAS ÚTEIS -->
           <div id="calc-res-uteis" class="form-card hidden" style="border-left:4px solid var(--primary); width:100%;">
-            <div class="form-section-title" style="margin-bottom:12px">
-              <i class="fas fa-briefcase" style="color:var(--primary)"></i> Resultado — Dias Úteis (CPC/2015)
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+              <div class="form-section-title" style="margin-bottom:0">
+                <i class="fas fa-briefcase" style="color:var(--primary)"></i> Resultado — Dias Úteis (CPC/2015)
+              </div>
+              <button class="btn-sec" onclick="copiarCertidaoSimples('uteis')" style="padding:4px 10px;font-size:11px;font-weight:700" title="Copiar certidão de tempestividade">
+                <i class="fas fa-copy"></i> Copiar Certidão
+              </button>
             </div>
             <div style="font-size:11px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:2px">
               Data de Vencimento
@@ -151,8 +235,13 @@
 
           <!-- RESULTADO DIAS CORRIDOS -->
           <div id="calc-res-corridos" class="form-card hidden" style="border-left:4px solid var(--purple); width:100%;">
-            <div class="form-section-title" style="margin-bottom:12px">
-              <i class="fas fa-calendar" style="color:var(--purple)"></i> Resultado — Dias Corridos
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+              <div class="form-section-title" style="margin-bottom:0">
+                <i class="fas fa-calendar" style="color:var(--purple)"></i> Resultado — Dias Corridos
+              </div>
+              <button class="btn-sec" onclick="copiarCertidaoSimples('corridos')" style="padding:4px 10px;font-size:11px;font-weight:700" title="Copiar certidão de tempestividade">
+                <i class="fas fa-copy"></i> Copiar Certidão
+              </button>
             </div>
             <div style="font-size:11px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:2px">
               Data de Vencimento
@@ -173,10 +262,46 @@
             <div id="calc-res-corridos-detalhes" style="margin-top:14px;border-top:1px dashed var(--border);padding-top:12px;font-size:13px;color:var(--text-muted)"></div>
           </div>
 
+          <!-- RESULTADO PRAZO DUPLO / COMPOSTO -->
+          <div id="calc-res-duplo" class="form-card hidden" style="border-left:4px solid var(--success); width:100%;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+              <div class="form-section-title" style="margin-bottom:0">
+                <i class="fas fa-layer-group" style="color:var(--success)"></i> Resultado — Prazo Duplo / Composto
+              </div>
+              <button class="btn-sec" onclick="copiarCertidaoDuplo()" style="padding:4px 10px;font-size:11px;font-weight:700" title="Copiar certidão de tempestividade para a área de transferência">
+                <i class="fas fa-copy"></i> Copiar Certidão
+              </button>
+            </div>
+
+            <div style="font-size:11px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:2px">
+              Vencimento Final Definitivo
+            </div>
+            <div id="calc-res-duplo-data" style="font-size:32px;font-weight:800;color:var(--success);margin-bottom:2px;letter-spacing:-0.5px"></div>
+            <div id="calc-res-duplo-diaSemana" style="font-size:15px;font-weight:700;color:var(--text-main);margin-bottom:14px"></div>
+
+            <!-- CARDS DE RESUMO DAS DUAS ETAPAS -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+              <div style="background:var(--bg-app);border-radius:10px;padding:12px;border:1px solid var(--border)">
+                <div style="font-size:10px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px">1ª Etapa (Ciência)</div>
+                <div id="calc-res-duplo-card-etapa1" style="font-size:14px;font-weight:800;color:var(--text-main);margin-top:2px"></div>
+              </div>
+              <div style="background:var(--bg-app);border-radius:10px;padding:12px;border:1px solid var(--border)">
+                <div style="font-size:10px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px">2ª Etapa (Vencimento)</div>
+                <div id="calc-res-duplo-card-etapa2" style="font-size:14px;font-weight:800;color:var(--text-main);margin-top:2px"></div>
+              </div>
+            </div>
+
+            <!-- LINHA DO TEMPO PASSO A PASSO -->
+            <div class="prazo-timeline" id="calc-res-duplo-timeline"></div>
+
+            <!-- DETALHES, FERIADOS E FUNDAMENTAÇÃO -->
+            <div id="calc-res-duplo-detalhes" style="margin-top:16px;border-top:1px dashed var(--border);padding-top:12px;font-size:13px;color:var(--text-muted)"></div>
+          </div>
+
           <!-- ESTADO VAZIO INICIAL -->
           <div id="calc-empty" class="form-card" style="text-align:center;padding:50px 20px;color:var(--text-light); width:100%;">
             <i class="fas fa-calculator" style="font-size:38px;display:block;margin-bottom:12px;color:var(--text-light)"></i>
-            <p style="font-size:14px;color:var(--text-muted)">Preencha a data de início e os dias para obter o cálculo</p>
+            <p style="font-size:14px;color:var(--text-muted)">Preencha os dados para obter o cálculo do prazo</p>
           </div>
         </div>
       </div>
